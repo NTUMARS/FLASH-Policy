@@ -6,6 +6,8 @@ Create and activate your own Python environment using the repository's [environm
 
 Pick a policy folder and follow its README for setup and usage. The [FLASH paper protocol](../../README.md#demonstrations-and-training) specifies the demonstration counts and settings for the five simulation tasks: 99 Close Box demonstrations, 100 each for Pick Cube and Stack Cube, and 40 each for the two LIBERO tasks. Unless stated otherwise, all policies are configured for 15,000 training steps with checkpoints every 1,250 steps; Table 1 evaluates the 10,000-step checkpoint.
 
+For all five tasks, follow the [simulation reproduction guide](../../REPRODUCING.md), which includes demonstration collection, conversion, FLASH training, and evaluation. The paper's **Open Drawer** is `libero_90.kitchen_scene1_open_bottom_drawer` (the bottom drawer in kitchen scene 1), and **Pick-Place Bowl** is `libero_90.kitchen_scene1_put_the_black_bowl_on_the_plate` (the black bowl on the plate in kitchen scene 1). Both use `--sim_set mujoco`; use these full identifiers with `--task_name_set`.
+
 `il_run.sh` applies these task defaults when no training budget is supplied. Explicit `--num_steps`, `--num_epochs`, `--demo_num`, and `--eval_ckpt_name` override the corresponding defaults. The 2D experiments retain their separate protocol.
 
 Example:

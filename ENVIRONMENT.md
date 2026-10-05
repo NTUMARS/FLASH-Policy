@@ -78,10 +78,15 @@ your selected task. Asset paths in task configurations are relative to the
 repository root, including `roboverse_data/assets/`. Some resources are downloaded
 on demand; their first use requires network access.
 
-The three manipulation tasks use Isaac Sim; the two LIBERO tasks use MuJoCo.
+The paper's Close Box, Pick Cube, and Stack Cube tasks use Isaac Sim. Its
+Pick-Place Bowl and Open Drawer tasks use MuJoCo, with the exact identifiers
+`libero_90.kitchen_scene1_put_the_black_bowl_on_the_plate` and
+`libero_90.kitchen_scene1_open_bottom_drawer`, respectively. See the
+[five-task reproduction guide](REPRODUCING.md) for the complete task mapping and
+collection, conversion, training, and evaluation commands.
 Original demonstrations, experiment outputs, and trained checkpoints are not
 included in this source release. Prepare your own demonstrations and follow the
-[conversion and training instructions](README.md#demonstrations-and-training).
+[task-specific instructions](REPRODUCING.md#select-a-task).
 
 For the standalone 2D tasks, follow the separate
 [CorridorPush and ForkReach dependency instructions](roboverse_learn/il/push2d/README.md).

@@ -31,7 +31,7 @@ All commands below assume your configured environment is active. The environment
 
 ## Demonstrations and training
 
-Original demonstrations, experiment outputs, and trained checkpoints are not distributed with this source release. Supply demonstrations in the metadata format produced by `scripts/advanced/collect_demo.py`, then convert them to Zarr. The following example assumes 100 successful Stack Cube demonstrations under `./roboverse_demo/demo_isaacsim/stack_cube-test/robot-franka/success`, the default output directory of `roboverse_learn/il/collect_demo.sh`:
+Original demonstrations, experiment outputs, and trained checkpoints are not distributed with this source release. Supply demonstrations in the metadata format produced by `scripts/advanced/collect_demo.py`, then convert them to Zarr. The [five-task reproduction guide](REPRODUCING.md) gives the collection and conversion commands for each task. The following quick-start example assumes 100 successful Stack Cube demonstrations under `./roboverse_demo/demo_isaacsim/stack_cube-test/robot-franka/success`, the default output directory of `roboverse_learn/il/collect_demo.sh`:
 
 ```bash
 python roboverse_learn/il/data2zarr_dp.py \
@@ -60,19 +60,23 @@ The converter writes to `data_policy/` and replaces an existing dataset with the
 
 The FLASH example uses sampling ratio 4. For baseline commands using the launcher's default ratio 1, run the converter with `--downsample_ratio 1` to prepare the corresponding `ds1` dataset. The converter and launcher must use the same ratio.
 
-The five simulation tasks described in the paper map to the following launcher arguments:
+### Five simulation tasks
 
-| Paper task | `--task_name_set` | `--sim_set` | Demonstrations |
-| --- | --- | --- | --- |
-| Close Box | `close_box` | `isaacsim` | 99 |
-| Pick Cube | `pick_cube` | `isaacsim` | 100 |
-| Stack Cube | `stack_cube` | `isaacsim` | 100 |
-| Pick-Place Bowl | `libero_90.kitchen_scene1_put_the_black_bowl_on_the_plate` | `mujoco` | 40 |
-| Open Drawer | `libero_90.kitchen_scene1_open_bottom_drawer` | `mujoco` | 40 |
+The paper reports **three Isaac Sim tasks and two MuJoCo tasks**. Use the exact task identifiers below with `il_run.sh --task_name_set` and `collect_demo.py --task`. The paper uses short display names; the command-line identifiers select the corresponding task implementation.
+
+| Paper task | Exact task identifier | `--sim_set` | Training demonstrations | Instructions |
+| --- | --- | --- | --- | --- |
+| Close Box | `close_box` | `isaacsim` | 99 | [Close Box](REPRODUCING.md#close-box) |
+| Pick Cube | `pick_cube` | `isaacsim` | 100 | [Pick Cube](REPRODUCING.md#pick-cube) |
+| Stack Cube | `stack_cube` | `isaacsim` | 100 | [Stack Cube](REPRODUCING.md#stack-cube) |
+| Pick-Place Bowl | `libero_90.kitchen_scene1_put_the_black_bowl_on_the_plate` | `mujoco` | 40 | [Pick-Place Bowl](REPRODUCING.md#pick-place-bowl) |
+| Open Drawer | `libero_90.kitchen_scene1_open_bottom_drawer` | `mujoco` | 40 | [Open Drawer](REPRODUCING.md#open-drawer) |
+
+**MuJoCo task names:** **Open Drawer** is the kitchen scene 1 task that opens the **bottom drawer** of the cabinet. **Pick-Place Bowl** is the kitchen scene 1 task that places the **black bowl on the plate**. Pass their complete `libero_90.…` identifiers in commands; `Open Drawer` and `Pick-Place Bowl` are the names used in the paper, not registered command-line task identifiers.
+
+Follow the [five-task reproduction guide](REPRODUCING.md) for task selection, demonstration preparation, dataset conversion, FLASH training, and evaluation of the Table 1 checkpoint.
 
 Close Box uses **99 valid expert demonstrations for both training and evaluation setup**. In the RoboVerse collection version used for our experiments, requesting 100 demonstrations stalled on the final attempt; collection was stopped after 99 successful trajectories. The other tasks use the counts listed above. Demonstration counts are separate from the 50 evaluation rollouts.
-
-The LIBERO identifiers above match the available task implementations. Appendix B does not give their full benchmark identifiers; confirm them against the recorded experiment configurations before claiming exact task parity.
 
 For FLASH, Appendix B specifies sampling stride 4, Legendre degree 6, history noise standard deviation 0.5, history regularization 0.1, consistency weight 1.0, and one inference step. The policy YAML provides the latter five settings; `--downsample_ratio 4` selects the corresponding sparse dataset.
 
@@ -98,7 +102,7 @@ The generic launcher requests 50 rollouts. The standalone ACT trainer names step
 
 ## Reproduction scope
 
-These commands demonstrate dataset conversion, training, and simulation evaluation with the stated FLASH settings.
+These commands and the [five-task reproduction guide](REPRODUCING.md) cover demonstration preparation, dataset conversion, training, and simulation evaluation with the stated FLASH settings. The original experiment data and checkpoints are not included; runs using newly prepared demonstrations may produce different numerical results.
 
 ## License and attribution
 
