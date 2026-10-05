@@ -1,0 +1,31 @@
+_target_: roboverse_learn.il.policies.vita.a2a_mini_policy.A2AMiniImagePolicy
+
+shape_meta: ${shape_meta}
+
+obs_encoder:
+  _target_: roboverse_learn.il.utils.vision.multi_image_obs_encoder.MultiImageObsEncoder
+  shape_meta: ${shape_meta}
+  rgb_model:
+    _target_: roboverse_learn.il.utils.vision.model_getter.get_resnet
+    name: resnet18
+    weights: null
+  resize_shape: null
+  crop_shape: null
+  random_crop: True
+  use_group_norm: True
+  share_rgb_model: False
+  imagenet_norm: True
+
+horizon: ${horizon}
+n_action_steps: ${eval:'${n_action_steps}+${n_latency_steps}'}
+n_obs_steps: ${n_obs_steps}
+
+# Flow matching inference steps (same as a2a)
+num_inference_steps: 6
+
+# SimpleFlowNet (MLP) architecture - same as a2a for fair comparison
+hidden_dim: 512
+num_layers: 8
+mlp_ratio: 4.0
+dropout: 0.1
+time_embed_dim: 512

@@ -1,0 +1,14 @@
+FLASH source distribution
+
+This distribution includes source adapted from RoboVerse:
+https://github.com/RoboVerseOrg/RoboVerse
+
+RoboVerse source has been modified to add FLASH and FLASH-G policies,
+imitation-learning configurations, demonstration processing, and experiment
+launching. Additional distribution edits update documentation, remove local
+workflow annotations, and make checkpoint archive storage configurable.
+
+Upstream contributor attribution is retained in CONTRIBUTORS.md. Copyright
+and attribution notices in copied components remain in their source files.
+Separate license texts for DETR and minGPT are retained with those components.
+External simulator assets and datasets are not distributed in this snapshot.

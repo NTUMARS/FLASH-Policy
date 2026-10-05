@@ -1,0 +1,53 @@
+# Action-to-Action Regression Policy (A2A-Reg)
+# Direct regression from history + obs latents to future action latents
+# Single MLP forward pass instead of iterative flow matching
+
+_target_: roboverse_learn.il.policies.vita.a2a_reg_policy.A2ARegImagePolicy
+
+shape_meta: ${shape_meta}
+
+obs_encoder:
+  _target_: roboverse_learn.il.utils.vision.multi_image_obs_encoder.MultiImageObsEncoder
+  shape_meta: ${shape_meta}
+  rgb_model:
+    _target_: roboverse_learn.il.utils.vision.model_getter.get_resnet
+    name: resnet18
+    weights: null
+  resize_shape: null
+  crop_shape: null
+  random_crop: True
+  use_group_norm: True
+  share_rgb_model: False
+  imagenet_norm: True
+
+horizon: ${horizon}
+n_action_steps: ${eval:'${n_action_steps}+${n_latency_steps}'}
+n_obs_steps: ${n_obs_steps}
+
+# Latent dimension (same as a2a)
+latent_dim: 512
+
+# Regression MLP parameters (matching SimpleFlowNet scale)
+hidden_dim: 512
+num_layers: 4
+mlp_ratio: 4
+dropout: 0.0
+
+# Action autoencoder parameters (same as a2a)
+action_ae:
+  kl_weight: 1e-6
+  enc_recon_weight: 0.5
+  flow_recon_weight: 0.5
+  recon_loss_type: l1
+  use_variational: false
+  freeze_encoder: false
+  freeze_decoder: false
+  net:
+    enc_hidden_dim: 512
+    dec_hidden_dim: 512
+    latent_dim: 512
+    num_heads: 8
+    mlp_ratio: 4
+    dropout: 0.0
+    num_layers: 4
+

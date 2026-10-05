@@ -1,0 +1,88 @@
+# ========== Hydra config system ==========
+defaults: # Hydra config merge rules
+  - _self_  # Current file has highest config priority
+  - dataset_config: robot_image_dataset # Dataset config
+  - policy_config: ${oc.env:policy_name,ddpm_dit} # Policy config, read from env var, default ddpm_dit
+  - eval_config: default_eval # Evaluation config
+  - train_config: default_train # Training config
+
+# ========== Basic metadata ==========
+policy_name: ${oc.env:policy_name,ddpm_dit} # Policy name, read from env var, default ddpm_dit
+task_name: placeholder # Task name placeholder, overridden by command-line argument
+name: robot_${task_name}  # Run name, concatenation of "robot_" and task name
+_target_: roboverse_learn.il.runners.default_runner.DefaultRunner # Hydra instantiation target class
+
+# ========== Data shape definition ==========
+image_shape: &image_shape [3, 256, 256] # Image shape
+shape_meta: &shape_meta # Data shape metadata
+  obs:  # Observation space definition, includes head camera and robot proprioceptive state
+    head_cam:
+      shape: *image_shape # Reference image shape defined above
+      type: rgb # Image type
+    agent_pos:  # Robot proprioceptive state (joint angles, etc.)
+      shape: [9] # Position shape: 9D vector (7 joints + 2 grippers)
+      type: low_dim # Position type (low-dimensional vector)
+  action:
+    shape: [9] # Action space definition
+    #type: low_dim # Action type (9D action, matches agent_pos dimension)
+
+exp_name: "default" # Experiment name, used to identify different experiments
+
+# ========== Trajectory prediction parameters ==========
+horizon: 16  # history + future (need horizon >= n_obs_steps + future_steps - 1)
+n_obs_steps: 8  # Observation history steps: model input includes the past n frames
+n_action_steps: 8  # Action steps: model output includes the next n frames
+n_latency_steps: 0 # Latency compensation steps: compensate system latency, usually 0
+dataset_obs_steps: ${n_obs_steps} # Dataset observation steps, references n_obs_steps
+past_action_visible: False # Whether to feed past actions as input (False to disable)
+keypoint_visible_rate: 1.0 # Keypoint visibility rate: 1.0 means all keypoints are visible
+obs_as_global_cond: True # Observation as global condition: True feeds observation as global condition into Transformer
+
+# ===== Proprioceptive ablation switch =====
+# use_proprioception=true: condition includes image _ proprio (agent_pos)，i.d. baseline (default)
+# use_proprioception=false: Only image condition(train.py will delete agent_pos from shape_meta.obs before OmegaConf.resolve)
+use_proprioception: true
+
+# ========== Experiment mode settings ==========
+train_enable: null
+eval_enable: null
+eval_path: null   # Evaluation checkpoint path; null means decided by command-line argument
+
+# ========== Multi-run configuration ==========
+multi_run:
+  run_dir: ./il_outputs/${policy_name}/${task_name} # Run output directory; ${policy_name} and ${task_name} from env vars
+  wandb_name_base: ${task_name} # WandB name base; ${task_name} from env var
+
+# ========== Hydra output directory configuration ==========
+hydra:
+  job:
+    override_dirname: ${name} # Override default directory naming; ${name} from env var
+  run:  # Single run directory configuration
+    dir: ./il_outputs/${policy_name}/${task_name}/${exp_name} # Determined by env vars
+  sweep: # Hyperparameter sweep directory configuration
+    dir: ./il_outputs/${policy_name}/${task_name}/${exp_name} # Determined by env vars
+    subdir: ${hydra.job.num} # Sub-directory; ${hydra.job.num} determined by Hydra
+
+# ========== WandB logging configuration ==========
+logging:
+  project: RoboVerse_IL_${task_name} # Project name; ${task_name} from env var
+  resume: False # Whether to resume previous run
+  mode: online # online for live upload, offline for local storage
+  name: ${task_name} # Run name
+  tags: # Tag list for filtering and grouping, determined by env vars
+    - ${task_name}
+    - ${policy_name}
+    - ${exp_name}
+  id: null # Run ID; null for auto-generation
+  group: null # Run group, used to associate multiple runs
+
+# ========== Checkpoint saving configuration ==========
+checkpoint:
+  topk: # topk strategy
+    monitor_key: test_mean_score # Monitored metric: test mean score
+    mode: max  # max=save top-K largest, min=save top-K smallest
+    k: 5 # Save the top-k best-performing models
+    format_str: 'epoch={epoch:04d}-test_mean_score={test_mean_score:.3f}.ckpt' # Filename format
+  save_last_ckpt: True # Save the last trained model
+  save_last_snapshot: False # Save the last training snapshot (includes optimizer, etc.)
+  save_root_dir: ./il_outputs/${policy_name}/${task_name}/${exp_name} # Checkpoint save root directory

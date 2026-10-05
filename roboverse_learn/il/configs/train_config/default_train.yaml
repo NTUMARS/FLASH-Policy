@@ -1,0 +1,81 @@
+# ========== Training base parameters ==========
+training_params:
+  device: "cuda:0"
+  seed: 42        # Random seed; fix this for experiment reproducibility
+  debug: False    # Debug mode: train only 3 steps per epoch for quick validation
+  resume: False   # Whether to load checkpoint and continue training
+
+  # ========== Optimizer configuration ==========
+  lr_scheduler: cosine
+  lr_warmup_steps: 500  # LR warmup steps: first n (500) steps linearly grow from 0 to lr
+  num_epochs: 100      # Total training epochs; overridden by num_epochs in il_run.sh
+  num_steps: 0         # Total training steps. When >0, overrides num_epochs (auto-converted via steps_per_epoch)
+                       # Used for fair comparison across different downsample_ratio
+                       # il_run.sh selects 15000 for the five FLASH paper tasks unless a budget is supplied.
+  gradient_accumulate_every: 1 # Gradient accumulation steps; update model params every n batches
+  lr_total_steps: 0    # When >0, build the LR scheduler over this horizon instead of the actual
+                       # training length (decouples annealing from stop step). 0 = original behavior.
+                       # e.g. 2500000 reproduces the de-facto constant-LR regime of the legacy
+                       # num_epochs=10000 baseline runs while still stopping at num_steps.
+  grad_clip_norm: 0    # When >0, clip grad norm of the whole policy to this value before each
+                       # optimizer step (official MIP recipe uses 10). 0 = disabled (default,
+                       # matches all existing baseline runs). Pre-clip norm is logged as grad_norm.
+
+  # ========== Model training techniques ==========
+  # EMA destroys performance when used with BatchNorm
+  # replace BatchNorm with GroupNorm.
+  use_ema: True  # Whether to use Exponential Moving Average:
+                 # True=maintain EMA of model weights for improved stability
+                 # Note: EMA is incompatible with BatchNorm; use GroupNorm instead
+  freeze_encoder: False # Whether to freeze the vision encoder
+
+  # ========== Training loop control (per epoch) ==========
+  rollout_every: 50     # Run rollout evaluation every n epochs (currently disabled)
+  checkpoint_every: 100   # Save checkpoint every n epochs (epoch mode)
+  checkpoint_every_n_steps: 1250  # When >0, save checkpoint by global_step, ignoring checkpoint_every
+                               # Used for fair comparison across models with different downsample_ratio
+  val_every: 5          # Run validation every n epochs
+  sample_every: 5       # Sample and log predictions every n epochs
+
+  # ========== Per-epoch step limits ==========
+  max_train_steps: 250 # Max training steps per epoch (prevents overly long epochs)
+  max_val_steps: 250 # Max validation steps per epoch
+
+  # misc
+  tqdm_interval_sec: 1.0 # tqdm progress bar update interval (seconds)
+
+# ========== Optimizer (AdamW) configuration ==========
+optimizer:
+  _target_: torch.optim.AdamW # Optimizer type: AdamW (Adam + decoupled weight decay)
+  lr: 1.0e-4                  # Learning rate (adjusted by scheduler)
+  betas: [0.95, 0.999]        # Momentum coefficients
+                              # beta1=0.95 controls decay rate of first moment estimate (momentum)
+                              # beta2=0.999 controls decay rate of second moment estimate (adaptive lr)
+  eps: 1.0e-8                 # Small constant to prevent division by zero (numerical stability)
+  weight_decay: 1.0e-6        # L2 regularization weight decay coefficient (prevents overfitting)
+
+# ========== Training dataloader ==========
+dataloader:
+  batch_size: 32            # Training batch size
+  num_workers: 0            # Data loading worker threads (mainly CPU-bound)
+  shuffle: True             # Randomly shuffle training set every epoch
+  pin_memory: True          # Whether to pin data to GPU memory (improves loading efficiency)
+  persistent_workers: False  # Whether to persist data loading workers (improves loading efficiency)
+
+# ========== Validation dataloader ==========
+val_dataloader:
+  batch_size: 32            # Validation batch size
+  num_workers: 0            # Data loading worker threads (mainly CPU-bound)
+  shuffle: False            # Whether to shuffle data (validation set is not shuffled)
+  pin_memory: True          # Whether to pin data to GPU memory (improves loading efficiency)
+  persistent_workers: False  # Whether to persist data loading workers (improves loading efficiency)
+
+# ========== EMA model configuration ==========
+ema:
+  _target_: roboverse_learn.il.utils.ema_model.EMAModel
+  update_after_step: 0    # Start updating EMA model after n steps (0 = start immediately)
+  inv_gamma: 1.0          # EMA decay coefficient gamma (1.0 = no decay)
+  power: 0.75             # EMA decay exponent p
+  min_value: 0.0          # EMA minimum value, also lower bound of decay rate (0.0 = no limit)
+  max_value: 0.9999       # EMA maximum value, also upper bound of decay rate
+                          # Decay rate formula: min(max_value, 1 - (1+step/inv_gamma)^(-power))

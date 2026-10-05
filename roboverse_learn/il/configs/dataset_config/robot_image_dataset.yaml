@@ -1,0 +1,34 @@
+# Hydra instantiation target: robot image dataset class
+_target_: roboverse_learn.il.datasets.robot_image_dataset.RobotImageDataset
+
+# Zarr dataset path: placeholder path, overridden by command-line argument in il_run.sh
+# Actual path format: data_policy/{task}FrankaL{dr_level}_obs:{obs_type}_act:{act_type}_ds{downsample_ratio}_{demo_num}.zarr
+# e.g.: data_policy/stack_cubeFrankaL0_obs:joint_pos_act:joint_pos_ds1_100.zarr   (66.7Hz native frequency)
+#       data_policy/stack_cubeFrankaL0_obs:joint_pos_act:joint_pos_ds4_100.zarr   (16.7Hz, downsampled 4x)
+# Use data2zarr_dp.py --downsample_ratio {N} to generate corresponding data, then use il_run.sh --downsample_ratio {N} for training and evaluation
+zarr_path: data_policy/useless.zarr
+
+# Trajectory window length: references horizon (16) in default_runner.yaml
+horizon: ${horizon}
+
+# Trajectory forward padding: ${n_obs_steps}-1 = 8-1 = 7
+# Ensures the first timestep also has a full 8-frame observation history (padded by repeating frame 0)
+pad_before: ${eval:'${n_obs_steps}-1'}
+
+# Trajectory backward padding: ${n_action_steps}-1 = 8-1 = 7
+# Ensures the last timestep also has a full 8-frame future action sequence (padded by repeating the last frame)
+pad_after: ${eval:'${n_action_steps}-1'}
+
+# Random seed: for reproducibility of dataset splitting and sampling
+seed: 42
+
+# Validation set ratio: n = 0.02 means 2% of data is used as validation set
+# With 100 demos, 98 are used for training and 2 for validation
+val_ratio: 0.02
+
+# Training batch size: references batch_size in train_config.yaml
+batch_size: ${train_config.dataloader.batch_size}
+
+# Max training episodes: null = use all data
+# Can be set to a specific number to limit training data volume for data efficiency experiments
+max_train_episodes: null

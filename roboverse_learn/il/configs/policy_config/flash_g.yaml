@@ -1,0 +1,56 @@
+# Instantiation target: FlashGDiTImagePolicy
+_target_: roboverse_learn.il.policies.flash.flash_g_policy.FlashGDiTImagePolicy
+
+# Data Shape
+shape_meta: ${shape_meta}     # Reference the shape meta(observation and action shapes) defined in default_runner.yaml
+
+# ========== Visual encoder configuration ==========
+obs_encoder:  
+  _target_: roboverse_learn.il.utils.vision.multi_image_obs_encoder.MultiImageObsEncoder
+  shape_meta: ${shape_meta}
+  rgb_model:
+    _target_: roboverse_learn.il.utils.vision.model_getter.get_resnet
+    name: resnet18 
+    weights: null  
+  resize_shape: null
+  crop_shape: null
+  random_crop: True     
+  use_group_norm: True
+  share_rgb_model: False
+  imagenet_norm: True 
+
+# ========== Trajectory parameters (reference default_runner.yaml) ==========
+horizon: ${horizon}
+n_action_steps: ${eval:'${n_action_steps}+${n_latency_steps}'}
+n_obs_steps: ${n_obs_steps}
+obs_as_global_cond: ${obs_as_global_cond} 
+
+num_inference_steps: 10
+
+# ========== DiT architecture parameters ==========
+diffusion_step_embed_dim: 256
+hidden_dim: 512
+num_layers: 4
+num_heads: 8
+mlp_ratio: 4
+dropout: 0.0
+
+# ========== FLASH-G parameters ==========
+poly_order: 6              # Degree-6 polynomial (7 coefficients per action dimension)
+basis_type: "legendre"     # Polynomial basis function type
+
+fit_pad: 1                  # Extended Window Fit Padding: Adds additional steps before and after when fitting the expert
+                            # 0 = Standard fit (with only H points), >0 is to fit H + 2 * fit_pad points and then take the middle H step
+
+boundary_constraint: true   # KKT C1 constraints on expert targets at the execution start and next-window boundary
+                            # Pins positions and finite-difference derivatives during training; inference outputs are not projected
+                            # Independent of fit_pad
+
+poly_prefix: 1                  # The number of extra timesteps to cover BEFORE the action points
+                                # null: The polynomials output by the model cover the entire horizon (H_poly = horizon)
+                                # 0: Only cover the action points (H_poly = n_action_steps)
+                                # n: Cover the action points and n extra history points (H_poly = n_action_steps + n)
+
+poly_suffix: 1                  # The number of extra timesteps to cover AFTER the action points (only effective when poly_prefix is not null)
+                                # 0: No extra coverage (BC overlap falls at fit_pad edge, less continuous)
+                                # n: Cover n extra discarded points (places the target's next-window anchor within the core)

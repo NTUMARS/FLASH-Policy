@@ -1,0 +1,44 @@
+# MIP: Minimal Iterative Policy (baseline for rebuttal)
+# Ported from the official implementation of "Much Ado About Noising:
+# Dispelling the Myths of Generative Robotic Control" (arXiv 2512.01809).
+# Everything except the MIP objective is kept identical to fm_dit.
+_target_: roboverse_learn.il.policies.mip.mip_dit_image_policy.MIPDiTImagePolicy
+
+
+shape_meta: ${shape_meta}
+
+obs_encoder:
+  _target_: roboverse_learn.il.utils.vision.multi_image_obs_encoder.MultiImageObsEncoder
+  shape_meta: ${shape_meta}
+  rgb_model:
+    _target_: roboverse_learn.il.utils.vision.model_getter.get_resnet
+    name: resnet18
+    weights: null
+  resize_shape: null
+  crop_shape: null
+  # constant center crop
+  random_crop: True
+  use_group_norm: True
+  share_rgb_model: False
+  imagenet_norm: True
+
+horizon: ${horizon}
+n_action_steps: ${eval:'${n_action_steps}+${n_latency_steps}'}
+n_obs_steps: ${n_obs_steps}
+obs_as_global_cond: ${obs_as_global_cond}
+num_inference_steps: 2
+
+diffusion_step_embed_dim: 256
+hidden_dim: 512
+num_layers: 4
+num_heads: 8
+mlp_ratio: 4
+dropout: 0.1
+
+# ========== MIP-specific parameters (official defaults) ==========
+t_two_step: 0.9    # t*, the fixed second time point
+loss_scale: 0.1    # global loss scale, from the official experiment config
+                   # (examples/configs/optimization/default.yaml; the dataclass
+                   # default in mip/config.py is a stale 100.0)
+norm_type: l2      # squared L2 summed over action dim (official get_norm);
+                   # also supports l1 / smooth_l1 as in the official code

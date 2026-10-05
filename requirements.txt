@@ -1,0 +1,10 @@
+# Install from the repository root in a Python 3.11 environment.
+# Isaac Lab and simulator assets require the additional steps in ENVIRONMENT.md.
+--extra-index-url https://download.pytorch.org/whl/cu128
+--extra-index-url https://pypi.nvidia.com
+
+numpy>=1.26,<2
+# Compatible with Isaac Sim 5.0.0's sentry-sdk requirement.
+wandb==0.17.9
+-e .[isaacsim,mujoco]
+-r roboverse_learn/il/policies/flash/requirements.txt

@@ -1,0 +1,10 @@
+# Policy/trainer dependencies for the two standalone 2D tasks.
+# Task runtime and Zarr 2 constraints are provided by the project's push2d extra.
+einops>=0.4.1
+diffusers
+wandb
+pandas
+matplotlib
+scikit-learn
+termcolor
+torchcfm

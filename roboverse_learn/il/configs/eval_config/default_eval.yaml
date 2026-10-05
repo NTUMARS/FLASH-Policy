@@ -1,0 +1,68 @@
+# ========== Evaluation environment parameters ==========
+eval_args:
+  _target_: roboverse_learn.il.utils.eval_args.Args # Evaluation argument class
+  level: 0               # Randomization level: 0=none, 1=scene+material, 2=add lighting, 3=add camera
+  task: ""               # Example task: stack_cube
+  max_step: 300          # Max steps (max steps per eval episode; exceeding counts as failure)
+  num_envs: 1            # Number of parallel environments (per episode; speeds up evaluation)
+  sim: "isaacsim"        # Simulator backend (isaacsim, mujoco, isaacgym)
+  ood_shift: 0.0        # OOD intensity: The distance that the target object moves radially away from the robot’s base, in meters.
+                        # A value of 0 indicates that this feature is disabled. To override this setting during evaluation,
+                        # use the command --override "eval_config.eval_args.ood_shift=0.3".
+  # ---- FLASH C_h robustness probe (sensitivity to errors in the history-fitted coefficients) ----
+  eval_history_noise_std: 0.00   # Inference-time Gaussian perturbation of the history polynomial
+                                # coefficients C_h (the flow start), in normalized-coefficient units —
+                                # same units as the training-time history_noise_std. 0.0 = off
+                                # (original behaviour, bit-for-bit). FLASH policy only.
+                                # Sweep with: --override "eval_config.eval_args.eval_history_noise_std=0.5"
+  eval_history_noise_seed: 0    # Seed of the DEDICATED noise generator (global RNG untouched, so
+                                # env / domain-randomization draws are identical across sigma values)
+  # ---- Discrete (binary) gripper actuation — discontinuity stress-test ----
+  gripper_binarize: false          # false = continuous gripper (ORIGINAL behaviour, unchanged).
+                                   # true  = gripper driven by a binary {open, close} signal (finger targets
+                                   #         snapped to open/close). Policy-agnostic; joint_pos only.
+                                   # Toggle at eval with:  --override "eval_config.eval_args.gripper_binarize=true"
+  gripper_binarize_threshold: 0.02 # midpoint threshold in raw finger units (franka range [0.0, 0.04]);
+                                   # mean finger target >= threshold -> open, else close. Only used when gripper_binarize=true.
+  # ---- Velocity feedforward control ----
+  velocity_pd_gains: true   # Enable PD gain override (custom Kp/Kd per joint; needs a velocity-capable
+                            # policy: FLASH family natively, or any policy with fd_vel_target=true)
+  send_vel_target: true     # Whether to forward the velocity signal to Franka's PD controller
+                            # (no-op for baselines unless fd_vel_target=true)
+  velocity_kp_scale: 1.0    # Uniform Kp scaling factor (>1 stiffer, <1 softer)
+  velocity_kd_scale: 1.0    # Uniform Kd scaling factor (>1 more damping, <1 less damping)
+  fd_vel_target: false      # Finite-difference velocity feedforward from the position-target chunk
+                            # (policy-agnostic; gives baselines a velocity signal via central
+                            # differences at the control period — within the current chunk only,
+                            # never across the replan boundary — sent through the SAME dof_vel_target
+                            # pipeline as FLASH-G; for FLASH-G it REPLACES the analytic velocity).
+                            # Not supported with temporal_agg=true.
+                            # Enable at eval with: --override "eval_config.eval_args.fd_vel_target=true"
+  # ---- Error visualization ----
+  fixed_error_ylim: true    # Fix error plot y-axis range (based on baseline model stats) for cross-model comparison
+
+# ========== Policy runner configuration ==========
+policy_runner:
+  # ========== Action space configuration ==========
+  action:
+    action_type: "joint_pos" # Action representation type:
+                      # "ee" = end-effector space: position + orientation + gripper
+                      # "joint_pos" = joint space: joint angles
+    ee_cfg:   # End-effector configuration (used when action_type="ee")
+      rotation_rep: "quaternion" # Rotation representation: quaternion (avoids gimbal lock of euler angles)
+                                  # "quaternion" = quaternion (4D)
+                                  # "euler" = euler angles (3D)
+                                  # "rotation_6d" = 6D rotation representation
+      gripper_rep: "q_pos"       # Gripper representation: gripper position
+                                  # "q_pos" = gripper position (continuous value 0-1)
+                                  # "binary" = binary (open/close)
+    delta: False                  # Whether to use delta action space: True=relative to current position, False=absolute
+
+  # ========== Observation space configuration ==========
+  obs:
+    obs_type: "joint_pos" # Observation representation type:
+                    # "ee" = end-effector space: position + orientation + gripper
+                    # "joint_pos" = joint space: joint angles
+    ee_cfg:      # End-effector configuration (matches action_type)
+      rotation_rep: "quaternion"  # Same as above
+      gripper_rep: "q_pos"        # Same as above
