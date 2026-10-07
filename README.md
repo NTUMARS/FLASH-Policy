@@ -144,7 +144,6 @@ The paper has been accepted at NeurIPS 2026 as a poster. Until the final proceed
   author = {Bai, Jiaqi and Jia, Jindou and Hu, Yuxuan and Li, Gen and Chen, Xiangyu and An, Tuo and Zuo, Kuangji and Yang, Jianfei},
   booktitle = {Advances in Neural Information Processing Systems},
   year = {2026},
-  note = {Accepted at NeurIPS 2026 (Poster)},
   eprint = {2605.15492},
   archivePrefix = {arXiv},
   primaryClass = {cs.RO},
