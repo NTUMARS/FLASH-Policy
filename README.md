@@ -1,10 +1,36 @@
-# FLASH Efficient Visuomotor Policy via Sparse Sampling
+<h1 align="center">FLASH Policy</h1>
+
+Official repository of **FLASH: Efficient Visuomotor Policy via Sparse Sampling**.
 
 **Accepted at [NeurIPS 2026](https://neurips.cc/Conferences/2026) (Poster).**
 
-This repository contains the implementation of **FLASH**, the method described in [FLASH: Efficient Visuomotor Policy via Sparse Sampling](https://arxiv.org/abs/2605.15492). It builds on [RoboVerse](https://github.com/RoboVerseOrg/RoboVerse) for simulation, demonstration processing, and imitation learning.
+[[Project page]](https://b1ue-jay.github.io/FLASH/)
+[[Paper]](https://arxiv.org/abs/2605.15492)
 
-FLASH represents action trajectories with Legendre polynomial coefficients and learns a flow from coefficients fitted to the observed history to future trajectory coefficients. Sparse temporal sampling extends the execution horizon, and polynomial differentiation provides analytic velocity targets. The FLASH policy combines flow matching with a consistency objective, using only one inference step.
+Jiaqi Bai<sup>&#42;</sup>,
+Jindou Jia<sup>&#42;</sup>,
+Yuxuan Hu,
+Gen Li,
+Xiangyu Chen,
+Tuo An,
+Kuangji Zuo,
+Jianfei Yang<sup>†</sup>
+
+MARS Lab, Nanyang Technological University, Singapore
+
+<sup>&#42;</sup> Equal contribution · <sup>†</sup> Corresponding author
+
+<p align="left">
+  <a href="https://b1ue-jay.github.io/FLASH/#demos">
+    <img src="readme_assets/flash_insert_cube.gif" width="480" alt="FLASH performing the real-world Insert Cube task">
+  </a>
+</p>
+
+*Real-world Insert Cube with FLASH Policy.*
+
+The implementation builds on [RoboVerse](https://github.com/RoboVerseOrg/RoboVerse) for simulation, demonstration processing, and imitation learning.
+
+FLASH represents action trajectories with Legendre polynomial coefficients and learns a flow from coefficients fitted to the observed history to future trajectory coefficients. Sparse temporal sampling extends the execution horizon, and polynomial differentiation provides analytic velocity targets. The FLASH policy combines flow matching with only one inference step.
 
 ## Implementation
 
